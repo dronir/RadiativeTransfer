@@ -15,13 +15,9 @@ type Ray
 	intensity::Float64
 end
 
-# Some additional Ray constructors
-Ray(o::Vector{Float64}, d::Vector{Float64}) = Ray(o, d, 1.0)
-Ray(o::Vector{Float64}) = Ray(o, [0.0, 0.0, -1.0], 1.0)
-
 # Some functions related to spheres
-point_in_sphere(point::Vector{Float64}, radius::Float64) = norm(point) < radius
-sphere_height(R::Float64, r::Float64) = sqrt(R^2 - r^2)
+point_in_sphere(point::Vector, radius::Real) = norm(point) < radius
+sphere_height(R, r) = sqrt(R^2 - r^2)
 
 # Generate optical depth until a scattering happens
 random_depth() = -log(rand())
@@ -75,13 +71,13 @@ function scattered_ray(ray::Ray, location::Vector{Float64}, g::Float64, omega::F
 end
 
 # Function to trace one ray into the medium, starting with intensity 1.0
-# incoming from the z-direction.
+# incoming from the z-direction. Returns the escaping ray.
 function trace_ray(tau_R::Float64, omega::Float64, g::Float64)
 	phi = 2pi*rand()
 	r = tau_R * rand()
 	height = sphere_height(tau_R, r)
 	
-	ray = Ray([r*cos(phi), r*sin(phi), height], [0.0, 0.0, -1.0])
+	ray = Ray([r*cos(phi), r*sin(phi), height], [0.0, 0.0, -1.0], 1.0)
 	
 	# Start the raytracing
 	tau = random_depth()
@@ -99,6 +95,5 @@ function trace_ray(tau_R::Float64, omega::Float64, g::Float64)
 		end
 	end
 end
-
 
 end # Module
