@@ -81,7 +81,7 @@ function trace_ray(tau_R::Float64, omega::Float64, g::Float64)
 	
 	# Start the raytracing
 	tau = random_depth()
-	if tau > 2h
+	if tau > 2*height
 		return ray
 	else
 		while true
