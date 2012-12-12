@@ -25,8 +25,7 @@ random_depth() = -log(rand())
 # Generate a random direction weighed with a Henyey-Greenstein
 # phase function.
 function random_scattering_angle(g::Float64)
-	P = rand()
-	s = 2P-1
+	s = 2*rand() - 1
 	if g != 0.0
 		mu = (1 + g^2 - ((1-g^2)/(1+g*s))^2) / (2g)
 	else
@@ -74,7 +73,7 @@ end
 # incoming from the z-direction. Returns the escaping ray.
 function trace_ray(tau_R::Float64, omega::Float64, g::Float64)
 	phi = 2pi*rand()
-	r = tau_R * rand()
+	r = sqrt(tau_R * rand())
 	height = sphere_height(tau_R, r)
 	
 	ray = Ray([r*cos(phi), r*sin(phi), height], [0.0, 0.0, -1.0], 1.0)
