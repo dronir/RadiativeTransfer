@@ -2,12 +2,18 @@
 #coding: utf8
 
 from matplotlib import pyplot as plot
-from numpy import loadtxt, degrees, linspace
+from numpy import loadtxt, degrees, linspace, sin, cos, pi
 
 angles = loadtxt("angles.txt")
 intensity = loadtxt("intensity.txt")
-plot.hist(angles, 30, color="black")
+orders = loadtxt("orders.txt")
+
+T = linspace(0,180.0,31)
+
+plot.hist(angles*180/pi, 30, color="black")
 plot.figure()
-plot.bar(linspace(0,180,31), intensity/intensity.sum(), width=180/30)
+plot.bar(T, intensity, width=180.0/31)
+plot.figure()
+plot.hist(orders, int(orders.max()))
 plot.show()
 
