@@ -45,6 +45,6 @@ function main(N::Integer, tau::Float64, omega::Float64, g::Float64)
 	println("")
 end
 
-main(N::Integer) = main(N, 2.0, 0.9, 0.5)
+main(N::Integer) = main(N, 2.0, 0.9, 0.6)
 
 #main(10000)
