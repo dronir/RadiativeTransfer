@@ -4,9 +4,7 @@ using RadiativeTransfer
 
 function main(N::Integer, tau::Float64, omega::Float64, g::Float64)
 	scattered_rays = Array(Ray, N)
-
-	omega = 0.9
-
+	
 	println("\nTracing $N rays...")
 	tic()
 	for i = 1:N
