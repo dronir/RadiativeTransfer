@@ -2,6 +2,9 @@
 
 module RadiativeTransfer
 export Ray, trace_ray
+export point_in_sphere, spherical_start
+export point_in_disc, disc_start
+export point_in_planar, planar_start
 
 # Radiative transfer in a spherical medium.
 
@@ -15,9 +18,12 @@ type Ray
 	intensity::Float64
 end
 
-# Some functions related to spheres
+# Some functions for checking whether a point is in a medium
 point_in_sphere(point::Vector, radius::Real) = norm(point) < radius
-sphere_height(R::Float64, r::Float64) = sqrt(R^2 - r^2)
+point_in_planar(point::Vector) = point[3] < 0
+function point_in_disc(point::Vector, radius::Real, depth::Real) 
+	return point[3] < depth && norm(point[1:2]) < radius && point[3] > 0
+end
 
 # Generate random free path
 random_depth() = -log(rand())
@@ -69,25 +75,51 @@ function scattered_ray(ray::Ray, location::Vector{Float64}, g::Float64, omega::F
 	return Ray(location, scattering_direction, scattered_intensity)
 end
 
+
+# Height of a hemisphere at given radius
+sphere_height(R::Float64, r::Float64) = sqrt(R^2 - r^2)
+
+# Function to generate ray starting position in the spherical case
+function spherical_start(radius::Real)
+	phi = 2pi*rand()
+	r = radius*sqrt(rand())
+	height = sphere_height(radius, r)
+	return Ray([r*cos(phi), r*sin(phi), height], [0.0, 0.0, -1.0], 1.0)
+end
+
+# Function to generate ray starting position in disc case
+function disc_start(radius::Real, incidence_angle::Real)
+	phi = 2pi*rand()
+	r = radius*sqrt(rand())
+	return Ray([r*cos(phi), r*sin(phi), 0.0], [-sin(incidence_angle), 0.0, -cos(incidence_angle)], 1.0)
+end
+
+# Function to generate ray starting position in plane-parallel case
+function planar_start(incidence_angle::Real)
+	return Ray([0.0, 0.0, 0.0], [-sin(incidence_angle), 0.0, -cos(incidence_angle)], 1.0)
+end
+
+
 # Function to trace one ray into the medium, starting with intensity 1.0
 # incoming from the z-direction. Returns the escaping ray.
-function trace_ray(tau_R::Float64, omega::Float64, g::Float64)
-	phi = 2pi*rand()
-	r = tau_R*sqrt(rand())
-	height = sphere_height(tau_R, r)
-	
-	ray = Ray([r*cos(phi), r*sin(phi), height], [0.0, 0.0, -1.0], 1.0)
+function trace_ray(starting_ray::Function, inside_medium::Function, max_order::Int64, omega::Float64, g::Float64)
+	ray = starting_ray()
 	
 	# Start the raytracing
-	while true
+	for i = 1:max_order
 		tau = random_depth()
 		location = ray.origin + tau*ray.direction
-		if point_in_sphere(location, tau_R)
+		if inside_medium(location)
 			ray = scattered_ray(ray, location, g, omega)
 		else
 			return ray
 		end
 	end
+	return Ray([0.0,0.0,0.0],[0.0,0.0,0.0],0.0)
 end
+
+trace_ray(startf::Function, inside::Function, w::Float64, g::Float64) = trace_ray(startf,inside,1000,w,g)
+trace_ray(w::Float64, g::Float64) = trace_ray(()->planar_start(0.0), point_in_planar, int(-log(1/w,eps())), w, g)
+
 
 end # Module
