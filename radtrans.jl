@@ -19,7 +19,7 @@ end
 point_in_sphere(point::Vector, radius::Real) = norm(point) < radius
 sphere_height(R, r) = sqrt(R^2 - r^2)
 
-# Generate optical depth until a scattering happens
+# Generate random free path
 random_depth() = -log(rand())
 
 # Generate a random direction weighed with a Henyey-Greenstein
@@ -79,18 +79,13 @@ function trace_ray(tau_R::Float64, omega::Float64, g::Float64)
 	ray = Ray([r*cos(phi), r*sin(phi), height], [0.0, 0.0, -1.0], 1.0)
 	
 	# Start the raytracing
-	tau = random_depth()
-	if tau > 2*height
-		return ray
-	else
-		while true
-			tau = random_depth()
-			location = ray.origin + tau*ray.direction
-			if point_in_sphere(location, tau_R)
-				ray = scattered_ray(ray, location, g, omega)
-			else
-				return ray
-			end
+	while true
+		tau = random_depth()
+		location = ray.origin + tau*ray.direction
+		if point_in_sphere(location, tau_R)
+			ray = scattered_ray(ray, location, g, omega)
+		else
+			return ray
 		end
 	end
 end
