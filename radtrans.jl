@@ -83,7 +83,7 @@ sphere_height(R, r) = sqrt(R^2 - r^2)
 # Function to generate ray starting position in the spherical case
 function spherical_start(radius::Real)
 	phi = 2pi*rand()
-	r = sqrt(radius * rand())
+	r = radius*sqrt(rand())
 	height = sphere_height(radius, r)
 	return Ray([r*cos(phi), r*sin(phi), height], [0.0, 0.0, -1.0], 1.0)
 end
@@ -91,7 +91,7 @@ end
 # Function to generate ray starting position in disc case
 function disc_start(radius::Real, incidence_angle::Real)
 	phi = 2pi*rand()
-	r = sqrt(radius * rand())
+	r = radius*sqrt(rand())
 	return Ray([r*cos(phi), r*sin(phi), 0.0], [-sin(incidence_angle), 0.0, -cos(incidence_angle)], 1.0)
 end
 
