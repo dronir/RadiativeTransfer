@@ -40,20 +40,6 @@ function random_scattering_angle(g::Float64)
 	return acos(mu)
 end
 
-# Two vector rotations
-function rotate_Z(v::Vector{Float64}, theta::Float64)
-	ct = cos(theta)
-	st = sin(theta)
-	M = [[ct, st, 0] [-st, ct, 0] [0, 0, 1]]
-	return M * v
-end
-
-function rotate_Y(v::Vector{Float64}, theta::Float64)
-	ct = cos(theta)
-	st = sin(theta)
-	M = [[ct, 0, st] [0, 1, 0] [-st, 0, ct]]
-	return M * v
-end
 
 # Compute the scattered ray given incoming ray, scattering location, asymmetry parameter
 # for the HG phase function, and the single-scattering albedo.
@@ -64,15 +50,33 @@ function scattered_ray(ray::Ray, location::Vector{Float64}, g::Float64, omega::F
 	cp = cos(phi)
 	st = sin(theta)
 	ct = cos(theta)
-	random_direction = [st*sp, st*cp, ct]
+	x = st*sp
+	y = st*cp
+	z = ct
 	
-	theta_rotation = acos(dot(ray.direction, [0.0, 0.0, 1.0]))
-	phi_rotation = acos(ray.direction[1] / (norm(ray.direction[1:2])))
-	phi_rotation = isnan(phi_rotation) ? 0.0 : phi_rotation
+	theta_rotation = acos(ray.direction[3])
+	ctr = cos(theta_rotation)
+	str = sin(theta_rotation)
+	phi_rotation = str==0.0 ? acos(ray.direction[1] / str) : 0.0
+	cpr = cos(phi_rotation)
+	spr = sin(phi_rotation)
 	
-	scattering_direction = rotate_Z(rotate_Y(random_direction, -theta_rotation), -phi_rotation)
-	scattered_intensity = ray.intensity * omega
-	return Ray(location, scattering_direction, scattered_intensity)
+	a1 = cpr
+	a2 = spr
+	b1 = ctr
+	b2 = str
+
+	t = (b1*x - b2*z)
+	new_x = a1*t - a2*y
+	new_y = a2*t + a1*y
+	new_z = b2*x + b1*z
+	
+	ray.origin = location
+	ray.direction[1] = new_x
+	ray.direction[2] = new_y
+	ray.direction[3] = new_z
+	ray.intensity *= omega
+	return ray
 end
 
 
