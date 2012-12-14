@@ -6,7 +6,7 @@ export Ray, trace_ray
 # Radiative transfer in a spherical medium.
 
 # Function for computing unit vector from given vector
-unit{T<:Number}(v::Vector{T}) = v / norm(v)
+unit(v::Vector{Float64}) = v / norm(v)
 
 # Type for ray bookkeeping
 type Ray
@@ -17,7 +17,7 @@ end
 
 # Some functions related to spheres
 point_in_sphere(point::Vector, radius::Real) = norm(point) < radius
-sphere_height(R, r) = sqrt(R^2 - r^2)
+sphere_height(R::Float64, r::Float64) = sqrt(R^2 - r^2)
 
 # Generate random free path
 random_depth() = -log(rand())
