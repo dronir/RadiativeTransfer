@@ -5,10 +5,13 @@ using RadiativeTransfer
 function main(N::Integer, tau::Float64, omega::Float64, g::Float64)
 	scattered_rays = Array(Ray, N)
 	
+	startf() = spherical_start(tau)
+	inside(loc::Vector{Float64}) = point_in_sphere(loc, tau)
+	
 	println("\nTracing $N rays...")
 	tic()
 	for i = 1:N
-		scattered_rays[i] = trace_ray(tau, omega, g)
+		scattered_rays[i] = trace_ray(startf, inside, omega, g)
 	end
 	toc()
 	
