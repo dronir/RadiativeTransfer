@@ -73,7 +73,7 @@ end
 # incoming from the z-direction. Returns the escaping ray.
 function trace_ray(tau_R::Float64, omega::Float64, g::Float64)
 	phi = 2pi*rand()
-	r = sqrt(tau_R * rand())
+	r = tau_R*sqrt(rand())
 	height = sphere_height(tau_R, r)
 	
 	ray = Ray([r*cos(phi), r*sin(phi), height], [0.0, 0.0, -1.0], 1.0)
