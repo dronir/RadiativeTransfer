@@ -124,6 +124,7 @@ function trace_ray(starting_ray::Function, inside_medium::Function, max_order::I
 end
 
 trace_ray(s::Function, i::Function, M::Integer, w::Float64, g::Float64) = trace_ray(s,i,M,w,[1.0,g,g])
+trace_ray(s::Function, i::Function, w::Float64, p::Vector{Float64}) = trace_ray(s,i,1000,w,p)
 trace_ray(s::Function, i::Function, w::Float64, g::Float64) = trace_ray(s,i,1000,w,[1.0,g,g])
 trace_ray(w::Float64, g::Float64) = trace_ray(()->planar_start(0.0), point_in_planar, int(-log(1/w,eps())), w, [1.0,g,g])
 
