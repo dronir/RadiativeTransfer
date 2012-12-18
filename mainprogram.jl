@@ -2,7 +2,7 @@
 require("radtrans.jl")
 using RadiativeTransfer
 
-function main(N::Integer, tau::Float64, omega::Float64, g::Float64)
+function main(N::Integer, tau::Float64, omega::Float64, phase_params::Vector{Float64})
 	scattered_rays = Array(Ray, N)
 	
 	startf() = spherical_start(tau)
@@ -11,7 +11,7 @@ function main(N::Integer, tau::Float64, omega::Float64, g::Float64)
 	println("\nTracing $N rays...")
 	tic()
 	for i = 1:N
-		scattered_rays[i] = trace_ray(startf, inside, omega, g)
+		scattered_rays[i] = trace_ray(startf, inside, omega, phase_params)
 	end
 	toc()
 	
