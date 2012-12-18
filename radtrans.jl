@@ -61,16 +61,11 @@ function scattered_ray(ray::Ray, location::Vector{Float64}, phase_params::Vector
 	phi_rotation = str==0.0 ? acos(ray.direction[1] / str) : 0.0
 	cpr = cos(phi_rotation)
 	spr = sin(phi_rotation)
-	
-	a1 = cpr
-	a2 = spr
-	b1 = ctr
-	b2 = str
 
-	t = (b1*x - b2*z)
-	new_x = a1*t - a2*y
-	new_y = a2*t + a1*y
-	new_z = b2*x + b1*z
+	t = (ctr*x - str*z)
+	new_x = cpr*t - spr*y
+	new_y = spr*t + cpr*y
+	new_z = str*x + ctr*z
 	
 	ray.origin = location
 	ray.direction[1] = new_x
