@@ -30,7 +30,8 @@ random_depth() = -log(rand())
 
 # Generate a random direction weighed with a Henyey-Greenstein
 # phase function.
-function random_scattering_angle(g::Float64)
+function random_scattering_angle(params::Vector{Float64})
+	g = rand() < params[1] ? params[2] : params[3]
 	s = 2*rand() - 1
 	if g != 0.0
 		mu = (1 + g^2 - ((1-g^2)/(1+g*s))^2) / (2g)
@@ -43,9 +44,9 @@ end
 
 # Compute the scattered ray given incoming ray, scattering location, asymmetry parameter
 # for the HG phase function, and the single-scattering albedo.
-function scattered_ray(ray::Ray, location::Vector{Float64}, g::Float64, omega::Float64)
+function scattered_ray(ray::Ray, location::Vector{Float64}, phase_params::Vector{Float64}, omega::Float64)
 	phi = 2pi * rand()
-	theta = random_scattering_angle(g)
+	theta = random_scattering_angle(phase_params)
 	sp = sin(phi)
 	cp = cos(phi)
 	st = sin(theta)
@@ -106,7 +107,7 @@ end
 
 # Function to trace one ray into the medium, starting with intensity 1.0
 # incoming from the z-direction. Returns the escaping ray.
-function trace_ray(starting_ray::Function, inside_medium::Function, max_order::Int64, omega::Float64, g::Float64)
+function trace_ray(starting_ray::Function, inside_medium::Function, max_order::Int64, omega::Float64, phase_params::Vector{Float64})
 	ray = starting_ray()
 	
 	# Start the raytracing
@@ -114,7 +115,7 @@ function trace_ray(starting_ray::Function, inside_medium::Function, max_order::I
 		tau = random_depth()
 		location = ray.origin + tau*ray.direction
 		if inside_medium(location)
-			ray = scattered_ray(ray, location, g, omega)
+			ray = scattered_ray(ray, location, phase_params, omega)
 		else
 			return ray
 		end
@@ -122,8 +123,9 @@ function trace_ray(starting_ray::Function, inside_medium::Function, max_order::I
 	return Ray([0.0,0.0,0.0],[0.0,0.0,0.0],0.0)
 end
 
-trace_ray(startf::Function, inside::Function, w::Float64, g::Float64) = trace_ray(startf,inside,1000,w,g)
-trace_ray(w::Float64, g::Float64) = trace_ray(()->planar_start(0.0), point_in_planar, int(-log(1/w,eps())), w, g)
+trace_ray(s::Function, i::Function, M::Integer, w::Float64, g::Float64) = trace_ray(s,i,M,w,[1.0,g,g])
+trace_ray(s::Function, i::Function, w::Float64, g::Float64) = trace_ray(s,i,1000,w,[1.0,g,g])
+trace_ray(w::Float64, g::Float64) = trace_ray(()->planar_start(0.0), point_in_planar, int(-log(1/w,eps())), w, [1.0,g,g])
 
 
 end # Module
