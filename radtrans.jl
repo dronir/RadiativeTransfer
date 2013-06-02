@@ -1,12 +1,13 @@
 #!/usr/bin/env julia
 
-module RadiativeTransfer
-export Ray, trace_ray
-export point_in_sphere, spherical_start
-export point_in_disc, disc_start
-export point_in_planar, planar_start
-
 # Radiative transfer in a spherical medium.
+module RadiativeTransfer
+
+
+export Ray, trace_ray
+export spherical_start, disc_start, planar_start
+export Medium, SphericalMedium, PlanarMedium, CylindricalMedium
+
 
 # Function for computing unit vector from given vector
 unit(v::Vector{Float64}) = v / norm(v)
@@ -18,11 +19,26 @@ type Ray
 	intensity::Float64
 end
 
-# Some functions for checking whether a point is in a medium
-point_in_sphere(point::Vector, radius::Real) = norm(point) < radius
-point_in_planar(point::Vector) = point[3] < 0
-function point_in_disc(point::Vector, radius::Real, depth::Real) 
-	return point[3] < depth && norm(point[1:2]) < radius && point[3] > 0
+# Define some types for the medium
+abstract Medium
+
+type SphericalMedium <: Medium
+    radius::Float64
+end
+
+type CylindricalMedium <: Medium
+    radius::Float64
+    thickness::Float64
+end
+
+type PlanarMedium <: Medium
+end
+
+# Function to check if a given point is inside a medium
+point_in_medium(M::SphericalMedium, point::Vector{Float64}) = norm(point) < M.radius
+point_in_medium(M::PlanarMedium, point::Vector{Float64}) = point[3] < 0
+function point_in_medium(M::CylindricalMedium, point::Vector{Float64})
+    return point[3] < M.thickness && point[3] > 0 && norm(point[1:2]) < M.radius
 end
 
 # Generate random free path
@@ -102,14 +118,14 @@ end
 
 # Function to trace one ray into the medium, starting with intensity 1.0
 # incoming from the z-direction. Returns the escaping ray.
-function trace_ray(starting_ray::Function, inside_medium::Function, max_order::Int64, omega::Float64, phase_params::Vector{Float64})
+function trace_ray(starting_ray::Function, medium::Medium, max_order::Int64, omega::Float64, phase_params::Vector{Float64})
 	ray = starting_ray()
 	
 	# Start the raytracing
 	for i = 1:max_order
 		tau = random_depth()
 		location = ray.origin + tau*ray.direction
-		if inside_medium(location)
+		if point_in_medium(medium, location)
 			ray = scattered_ray(ray, location, phase_params, omega)
 		else
 			return ray
