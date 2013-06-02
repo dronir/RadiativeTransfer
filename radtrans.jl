@@ -7,32 +7,39 @@ module RadiativeTransfer
 export Ray, trace_ray
 export spherical_start, disc_start, planar_start
 export Medium, SphericalMedium, PlanarMedium, CylindricalMedium
-
+export Detector
+export unit
 
 # Function for computing unit vector from given vector
 unit(v::Vector{Float64}) = v / norm(v)
 
 # Type for ray bookkeeping
 type Ray
-	origin::Vector{Float64}
-	direction::Vector{Float64}
-	intensity::Float64
+    origin::Vector{Float64}
+    direction::Vector{Float64}
+    intensity::Float64
 end
 
 # Define some types for the medium
 abstract Medium
 
-type SphericalMedium <: Medium
+immutable SphericalMedium <: Medium
     radius::Float64
 end
 
-type CylindricalMedium <: Medium
+immutable CylindricalMedium <: Medium
     radius::Float64
     thickness::Float64
 end
 
-type PlanarMedium <: Medium
+immutable PlanarMedium <: Medium
 end
+
+type Detector
+    direction::Vector{Float64}
+    intensity::Float64
+end
+Detector(direction::Vector{Float64}) = Detector(direction, 0.0)
 
 # Function to check if a given point is inside a medium
 point_in_medium(M::SphericalMedium, point::Vector{Float64}) = norm(point) < M.radius
@@ -41,54 +48,61 @@ function point_in_medium(M::CylindricalMedium, point::Vector{Float64})
     return point[3] < M.thickness && point[3] > 0 && norm(point[1:2]) < M.radius
 end
 
+function trace_to_direction(M::PlanarMedium, point::Vector{Float64}, direction::Vector{Float64})
+    if direction[3] <= 0
+        return Inf
+    end
+    return abs(point[3]) / direction[3]
+end
+
 # Generate random free path
 random_depth() = -log(rand())
 
 # Generate a random direction weighed with a Henyey-Greenstein
 # phase function.
 function random_scattering_angle(params::Vector{Float64})
-	g = rand() < params[1] ? params[2] : params[3]
-	s = 2*rand() - 1
-	if g != 0.0
-		mu = (1 + g^2 - ((1-g^2)/(1+g*s))^2) / (2g)
-	else
-		mu = s
-	end
-	return acos(mu)
+    g = rand() < params[1] ? params[2] : params[3]
+    s = 2*rand() - 1
+    if g != 0.0
+        mu = (1 + g^2 - ((1-g^2)/(1+g*s))^2) / (2g)
+    else
+        mu = s
+    end
+    return acos(mu)
 end
 
 
 # Compute the scattered ray given incoming ray, scattering location, asymmetry parameter
 # for the HG phase function, and the single-scattering albedo.
 function scattered_ray(ray::Ray, location::Vector{Float64}, phase_params::Vector{Float64}, omega::Float64)
-	phi = 2pi * rand()
-	theta = random_scattering_angle(phase_params)
-	sp = sin(phi)
-	cp = cos(phi)
-	st = sin(theta)
-	ct = cos(theta)
-	x = st*sp
-	y = st*cp
-	z = ct
-	
-	theta_rotation = acos(ray.direction[3])
-	ctr = cos(theta_rotation)
-	str = sin(theta_rotation)
-	phi_rotation = str==0.0 ? acos(ray.direction[1] / str) : 0.0
-	cpr = cos(phi_rotation)
-	spr = sin(phi_rotation)
+    phi = 2pi * rand()
+    theta = random_scattering_angle(phase_params)
+    sp = sin(phi)
+    cp = cos(phi)
+    st = sin(theta)
+    ct = cos(theta)
+    x = st*sp
+    y = st*cp
+    z = ct
+    
+    theta_rotation = acos(ray.direction[3])
+    ctr = cos(theta_rotation)
+    str = sin(theta_rotation)
+    phi_rotation = str==0.0 ? acos(ray.direction[1] / str) : 0.0
+    cpr = cos(phi_rotation)
+    spr = sin(phi_rotation)
 
-	t = (ctr*x - str*z)
-	new_x = cpr*t - spr*y
-	new_y = spr*t + cpr*y
-	new_z = str*x + ctr*z
-	
-	ray.origin = location
-	ray.direction[1] = new_x
-	ray.direction[2] = new_y
-	ray.direction[3] = new_z
-	ray.intensity *= omega
-	return ray
+    t = (ctr*x - str*z)
+    new_x = cpr*t - spr*y
+    new_y = spr*t + cpr*y
+    new_z = str*x + ctr*z
+    
+    ray.origin = location
+    ray.direction[1] = new_x
+    ray.direction[2] = new_y
+    ray.direction[3] = new_z
+    ray.intensity *= omega
+    return ray
 end
 
 
@@ -97,47 +111,52 @@ sphere_height(R::Float64, r::Float64) = sqrt(R^2 - r^2)
 
 # Function to generate ray starting position in the spherical case
 function spherical_start(radius::Real)
-	phi = 2pi*rand()
-	r = radius*sqrt(rand())
-	height = sphere_height(radius, r)
-	return Ray([r*cos(phi), r*sin(phi), height], [0.0, 0.0, -1.0], 1.0)
+    phi = 2pi*rand()
+    r = radius*sqrt(rand())
+    height = sphere_height(radius, r)
+    return Ray([r*cos(phi), r*sin(phi), height], [0.0, 0.0, -1.0], 1.0)
 end
 
 # Function to generate ray starting position in disc case
 function disc_start(radius::Real, incidence_angle::Real)
-	phi = 2pi*rand()
-	r = radius*sqrt(rand())
-	return Ray([r*cos(phi), r*sin(phi), 0.0], [-sin(incidence_angle), 0.0, -cos(incidence_angle)], 1.0)
+    phi = 2pi*rand()
+    r = radius*sqrt(rand())
+    return Ray([r*cos(phi), r*sin(phi), 0.0], [-sin(incidence_angle), 0.0, -cos(incidence_angle)], 1.0)
 end
 
 # Function to generate ray starting position in plane-parallel case
 function planar_start(incidence_angle::Real)
-	return Ray([0.0, 0.0, 0.0], [-sin(incidence_angle), 0.0, -cos(incidence_angle)], 1.0)
+    return Ray([0.0, 0.0, 0.0], [-sin(incidence_angle), 0.0, -cos(incidence_angle)], 1.0)
 end
 
 
 # Function to trace one ray into the medium, starting with intensity 1.0
 # incoming from the z-direction. Returns the escaping ray.
-function trace_ray(starting_ray::Function, medium::Medium, max_order::Int64, omega::Float64, phase_params::Vector{Float64})
-	ray = starting_ray()
-	
-	# Start the raytracing
-	for i = 1:max_order
-		tau = random_depth()
-		location = ray.origin + tau*ray.direction
-		if point_in_medium(medium, location)
-			ray = scattered_ray(ray, location, phase_params, omega)
-		else
-			return ray
-		end
-	end
-	return Ray([0.0,0.0,0.0],[0.0,0.0,0.0],0.0)
+function trace_ray(detectors::Array{Detector}, starting_ray::Function, medium::Medium, max_order::Int64, omega::Float64, phase_params::Vector{Float64})
+    ray = starting_ray()
+    
+    # Start the raytracing
+    for i = 1:max_order
+        tau = random_depth()
+        location = ray.origin + tau*ray.direction
+        if point_in_medium(medium, location)
+            ray = scattered_ray(ray, location, phase_params, omega)
+            # Peel-off to detector array
+            for pixel in detectors
+                rho = trace_to_direction(medium, location, pixel.direction)
+                pixel.intensity += exp(-rho) * ray.intensity
+            end
+        else
+            return detectors
+        end
+    end
+    return detectors
 end
 
-trace_ray(s::Function, i::Function, M::Integer, w::Float64, g::Float64) = trace_ray(s,i,M,w,[1.0,g,g])
-trace_ray(s::Function, i::Function, w::Float64, p::Vector{Float64}) = trace_ray(s,i,1000,w,p)
-trace_ray(s::Function, i::Function, w::Float64, g::Float64) = trace_ray(s,i,1000,w,[1.0,g,g])
-trace_ray(w::Float64, g::Float64) = trace_ray(()->planar_start(0.0), point_in_planar, int(-log(1/w,eps())), w, [1.0,g,g])
+#trace_ray(s::Function, i::Function, M::Integer, w::Float64, g::Float64) = trace_ray(s,i,M,w,[1.0,g,g])
+#trace_ray(s::Function, i::Function, w::Float64, p::Vector{Float64}) = trace_ray(s,i,1000,w,p)
+#trace_ray(s::Function, i::Function, w::Float64, g::Float64) = trace_ray(s,i,1000,w,[1.0,g,g])
+#trace_ray(w::Float64, g::Float64) = trace_ray(()->planar_start(0.0), point_in_planar, int(-log(1/w,eps())), w, [1.0,g,g])
 
 
 end # Module
