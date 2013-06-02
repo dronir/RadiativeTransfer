@@ -3,14 +3,14 @@ require("radtrans.jl")
 using RadiativeTransfer
 
 
-function main(N::Integer, omega::Real, phase_params::Vector{Float64})
+function main(N::Integer, theta_i::Real, omega::Real, phase_params::Vector{Float64})
 	detectors = Array(Detector, 3)
 	detectors[1] = Detector([0.0, 0.0, 1.0])
     detectors[2] = Detector(unit([1.0, 0.0, 1.0]))
     detectors[3] = Detector(unit([-1.0, 0.0, 1.0]))
     
     
-	startf() = planar_start(.785398163)
+	startf() = planar_start(theta_i)
 	medium = PlanarMedium()
 	
 	println("\nTracing $N rays...")
@@ -20,6 +20,8 @@ function main(N::Integer, omega::Real, phase_params::Vector{Float64})
 	end
 	toc()
 	
-	println(detectors)
+	for d in detectors
+        println(d)
+    end
 end
 

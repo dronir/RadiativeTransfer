@@ -71,6 +71,16 @@ function random_scattering_angle(params::Vector{Float64})
     return acos(mu)
 end
 
+function normalized_2HG(theta::Real, params::Vector{Float64})
+    w = params[1]
+    g1 = params[2]
+    g2 = params[3]
+    ct = cos(theta)
+    HG1 = (1 - g1^2) / (1 + g1^2 - 2*g1*ct)^1.5
+    HG2 = (1 - g2^2) / (1 + g2^2 - 2*g2*ct)^1.5
+    return w*HG1 + (1-w)*HG2
+end
+
 
 # Compute the scattered ray given incoming ray, scattering location, asymmetry parameter
 # for the HG phase function, and the single-scattering albedo.
@@ -140,12 +150,14 @@ function trace_ray(detectors::Array{Detector}, starting_ray::Function, medium::M
         tau = random_depth()
         location = ray.origin + tau*ray.direction
         if point_in_medium(medium, location)
-            ray = scattered_ray(ray, location, phase_params, omega)
             # Peel-off to detector array
             for pixel in detectors
                 rho = trace_to_direction(medium, location, pixel.direction)
-                pixel.intensity += exp(-rho) * ray.intensity
+                scattering_angle = acos(dot(pixel.direction, ray.direction))
+                eff = normalized_2HG(scattering_angle, phase_params)
+                pixel.intensity += exp(-rho) * ray.intensity * omega * eff
             end
+            ray = scattered_ray(ray, location, phase_params, omega)
         else
             return detectors
         end
