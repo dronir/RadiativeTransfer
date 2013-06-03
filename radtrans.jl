@@ -55,6 +55,13 @@ function trace_to_direction(M::PlanarMedium, point::Vector{Float64}, direction::
     return abs(point[3]) / direction[3]
 end
 
+function trace_to_direction(M::SphericalMedium, point::Vector{Float64}, direction::Vector{Float64})
+    b = 2*dot(direction, point)
+    c = dot(point,point) - M.radius^2
+    q = -0.5 * (b - sign(b) * sqrt(b^2 - 4*c))
+    return sign(q) > 0 ? q : c/q
+end
+
 # Generate random free path
 random_depth() = -log(rand())
 
