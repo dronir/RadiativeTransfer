@@ -8,17 +8,17 @@ using RadiativeTransfer
 function trace_geometry(N::Integer, alpha::Real, omega::Real, phase_params::Vector{Float64})
     radius = 20.0
     max_order = 20
-	detectors = Array(Detector, 1)
-	detectors[1] = Detector([sin(alpha), 0.0, cos(alpha)], max_order)
+    detectors = Array(Detector, 1)
+    detectors[1] = Detector([sin(alpha), 0.0, cos(alpha)], max_order)
     
-	startf() = spherical_start(radius)
-	medium = SphericalMedium(radius)
-	
-	for i = 1:N
-		trace_ray(detectors, startf, medium, max_order, omega, phase_params)
-	end
-	
-	return detectors[1].intensity
+    startf() = spherical_start(radius)
+    medium = SphericalMedium(radius)
+    
+    for i = 1:N
+        trace_ray(detectors, startf, medium, max_order, omega, phase_params)
+    end
+    
+    return detectors[1].intensity
 end
 
 
