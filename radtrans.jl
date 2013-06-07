@@ -9,6 +9,7 @@ export spherical_start, disc_start, planar_start
 export Medium, SphericalMedium, PlanarMedium, CylindricalMedium
 export Detector
 export unit
+export double_HG
 
 # Function for computing unit vector from given vector
 unit(v::Vector{Float64}) = v / norm(v)
