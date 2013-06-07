@@ -25,10 +25,10 @@ end
 # Detector at infinity (to count intensity emitted to that direction)
 type Detector
     direction::Vector{Float64}
-    intensity::Float64
+    intensity::Vector{Float64}
 end
 # Constructor with intensity count zero
-Detector(direction::Vector{Float64}) = Detector(direction, 0.0)
+Detector(direction::Vector{Float64}, order::Integer) = Detector(direction, zeros(order))
 
 
 # MEDIUM
@@ -198,14 +198,14 @@ function trace_ray(detectors::Array{Detector}, starting_ray::Function, medium::M
                 rho = trace_to_direction(medium, location, pixel.direction)
                 scattering_angle = acos(dot(pixel.direction, ray.direction))
                 eff = double_HG(scattering_angle, phase_params)
-                pixel.intensity += exp(-rho) * ray.intensity * omega * eff
+                pixel.intensity[i] += exp(-rho) * ray.intensity * omega * eff
             end
             ray = scattered_ray(ray, location, phase_params, omega)
         else
-            return detectors
+            return
         end
     end
-    return detectors
+    return
 end
 
 
