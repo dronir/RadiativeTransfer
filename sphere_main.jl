@@ -45,7 +45,8 @@ function main(N::Integer, M::Integer, omega::Real, phase_params::Vector{Float64}
         orders = detectors[i].intensity
         traced_first_order[i] = orders[1]
         traced_total[i] = sum(orders)
-        analytical_LS[i] = pi/32 * omega * double_HG(pi-alpha, phase_params) * (1 - sin(alpha/2) * tan(alpha/2) * log(cot(alpha/4)))
+        analytical_LS[i] = pi/32 * omega * double_HG(pi-alpha, phase_params)
+        analytical_LS[i] *= (1 - sin(alpha/2) * tan(alpha/2) * log(cot(alpha/4)))
     end
     
     # Normalize values to zero phase angle
