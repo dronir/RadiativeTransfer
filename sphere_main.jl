@@ -1,5 +1,5 @@
 #!/usr/bin/env julia
-require("radtrans.jl")
+
 using RadiativeTransfer
 
 # Trace N rays to detectors at phase angles 'alphas' using given omega and 2HG parameters
