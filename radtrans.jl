@@ -79,7 +79,7 @@ function trace_to_direction(M::CylindricalMedium, point::Vector{Float64}, direct
     dz = direction[3]
     if dz > 0
         t_plane = (point[3] - M.half_thickness) / dz
-    elseif dz <= 0
+    elseif dz < 0
         t_plane = -(point[3] + M.half_thickness) / dz
     else
         t_plane = Inf
