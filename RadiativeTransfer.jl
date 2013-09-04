@@ -167,7 +167,7 @@ function scattered_ray(ray::Ray, location::Vector{Float64}, phase_params::Vector
     theta_rotation = acos(ray.direction[3])
     ctr = cos(theta_rotation)
     str = sin(theta_rotation)
-    phi_rotation = str==0.0 ? acos(ray.direction[1] / str) : 0.0
+    phi_rotation = (str!=0.0) ? acos(ray.direction[1] / str) : 0.0
     cpr = cos(phi_rotation)
     spr = sin(phi_rotation)
 
